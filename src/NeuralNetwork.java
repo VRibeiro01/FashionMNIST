@@ -74,6 +74,7 @@ public class NeuralNetwork {
      * @param biasOutputLayer
      * @param epochs
      */
+    @SuppressWarnings("JavaDoc")
     public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, int epochs, double learningRate, double[] input) {
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
@@ -177,6 +178,7 @@ public class NeuralNetwork {
      * @param z
      * @return
      */
+    @SuppressWarnings("JavaDoc")
     public double sigmoid(double z) {
         return 1 / (1 + Math.exp(-z));
     }
@@ -224,14 +226,14 @@ public class NeuralNetwork {
      * @return
      */
     //TODO Methode für mehrere Eingabevektoren implementieren
+    @SuppressWarnings("JavaDoc")
     public double costFunction(double[] expectedResults) {
         if (prediction.length != expectedResults.length) {
             throw new IllegalArgumentException("Prediction and Expectation don't match in size!");
         }
         double[] costVector = Matrix.subtract(expectedResults, prediction);
 
-        double cost = 1.0 / 2.0 * computeVectorLength(costVector);
-        return cost;
+        return 1.0 / 2.0 * computeVectorLength(costVector);
     }
 
     /**
@@ -242,8 +244,8 @@ public class NeuralNetwork {
      */
     public double computeVectorLength(double[] vector) {
         double length = 0.0;
-        for (int i = 0; i < vector.length; i++) {
-            length += Math.pow(vector[i], 2);
+        for (double v : vector) {
+            length += Math.pow(v, 2);
         }
         length = Math.sqrt(length);
         return length;
@@ -256,13 +258,13 @@ public class NeuralNetwork {
      * @param targetOutputs Die Zielwerte, die vom Netz erlernt werden sollen
      */
     public void backpropagateError(double[] targetOutputs) {
-        /**
+        /*
          * 1. Schritt: Fehler(Gradient) in der Ausgabe-Ebene ermitteln:
          */
         computeOutputError(targetOutputs);
 
 
-        /**
+        /*
          * 2. Schritt: Fehler(Gradient) in der versteckten Schicht berechnen
          * Matrix der Gewichte Hidden To Output transponieren,
          * Matrix mit Gradientenmatrix der Ausgabeschicht multiplizieren
@@ -297,8 +299,9 @@ public class NeuralNetwork {
      * Das ist eine Hilfsmethode, um die Ableitung der aktuellen Aktivierungsfunktion zu berechnen
      *
      * @param z
-     * @return
+     * @return Ableitung der Aktivierungsfunktion nach z
      */
+    @SuppressWarnings("JavaDoc")
     public double derivativeActivationFunction(double z) {
         if (activationFunction.equalsIgnoreCase("ReLu")) {
             if (z <= 0) return 0;
