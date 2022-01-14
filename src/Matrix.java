@@ -10,7 +10,7 @@ public class Matrix {
     }
 
     public static double[][] multiplyMatrices(double[][] firstMatrix, double[][] secondMatrix) {
-        if(firstMatrix[0].length != secondMatrix.length){
+        if (firstMatrix[0].length != secondMatrix.length) {
             throw new IllegalArgumentException("Matrix Sizes not fit for multiplication");
         }
         double[][] result = new double[firstMatrix.length][secondMatrix[0].length];
@@ -24,24 +24,24 @@ public class Matrix {
         return result;
     }
 
-    public static double[][] transposeMatrix( double[][] matrix){
-        double transpose[][]=new double[matrix[0].length][matrix.length];
-        for(int i=0;i<matrix.length;i++){
-            for(int j=0;j<matrix[0].length;j++){
-                transpose[j][i]=matrix[i][j];
+    public static double[][] transposeMatrix(double[][] matrix) {
+        double[][] transpose = new double[matrix[0].length][matrix.length];
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                transpose[j][i] = matrix[i][j];
             }
         }
         return transpose;
     }
 
-    public static double[][] addMatrices( double[][] firstMatrix, double[][] secondMatrix){
-        if(firstMatrix.length != secondMatrix.length || firstMatrix[0].length != secondMatrix[0].length){
+    public static double[][] addMatrices(double[][] firstMatrix, double[][] secondMatrix) {
+        if (firstMatrix.length != secondMatrix.length || firstMatrix[0].length != secondMatrix[0].length) {
             throw new IllegalArgumentException("Matrix addition only possible if number of rows and columns are equal!");
         }
         int rows = firstMatrix.length;
         int columns = firstMatrix[0].length;
         double[][] sum = new double[rows][columns];
-        for(int i = 0; i < rows; i++) {
+        for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 sum[i][j] = firstMatrix[i][j] + secondMatrix[i][j];
             }
@@ -49,9 +49,8 @@ public class Matrix {
         return sum;
     }
 
-    public static double[] subtract(double[] A, double[] B)
-    {
-        if(A.length != B.length){
+    public static double[] subtract(double[] A, double[] B) {
+        if (A.length != B.length) {
             throw new IllegalArgumentException("Matrices must have equal size to be subtracted");
         }
         int i;

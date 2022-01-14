@@ -203,16 +203,44 @@ public class Tests {
     }
 
     @Test
-    public void updateWeightsAndBiases(){
+    public void updateInputToHiddenWeights(){
         neuralNetwork.makePrediction();
         neuralNetwork.backpropagateError(expectedOutput);
        double inputIn1Hidden1 = input[0] * weightsInputToHidden[0][0];
        double newWeightIn1ToHidden1 =  weightsInputToHidden[0][0] - learningRate * (inputIn1Hidden1 - neuralNetwork.hiddenGradients[0][0]);
        System.out.println("Old Weights From Input to Hidden Layer: \n" + Arrays.deepToString(weightsInputToHidden));
        neuralNetwork.updateWeights();
-       System.out.println("Expected Weight From Input Neuron 1 to Hidden Neuron 1: ");
+       System.out.println("Expected Weight From Input-Neuron 1 to Hidden-Neuron 1: " + newWeightIn1ToHidden1);
+        System.out.println("Actual Weight From Input-Neuron 1 to Hidden-Neuron 1: " + weightsInputToHidden[0][0]);
+        System.out.println("New Weights Input to Hidden Layer  \n" + Arrays.deepToString(weightsInputToHidden));
+        Assertions.assertEquals(newWeightIn1ToHidden1,weightsInputToHidden[0][0]);
+
+        double inputHidden1Out1 = neuralNetwork.outputHiddenLayer[0][0] * weightsHiddenToOutput[0][0];
+        double newWeightHidden1ToOut1 =  weightsInputToHidden[0][0] - learningRate * (inputHidden1Out1 - neuralNetwork.outputGradients[0][0]);
+        System.out.println("Old Weights From  Hidden Layer to Output Layer: \n" + Arrays.deepToString(weightsHiddenToOutput));
+        neuralNetwork.updateWeights();
+        System.out.println("Expected Weight From Input-Neuron 1 to Hidden-Neuron 1: " + newWeightIn1ToHidden1);
+        System.out.println("Actual Weight From Input-Neuron 1 to Hidden-Neuron 1: " + weightsInputToHidden[0][0]);
+        System.out.println("New Weights Input to Hidden Layer  \n" + Arrays.deepToString(weightsInputToHidden));
+        Assertions.assertEquals(newWeightIn1ToHidden1,weightsInputToHidden[0][0]);
 
 
+
+    }
+
+    @Test
+    public void updateHiddenToOutputWeights(){
+        neuralNetwork.makePrediction();
+        neuralNetwork.backpropagateError(expectedOutput);
+        double inputHidden1Out1 = neuralNetwork.outputHiddenLayer[0][0] * weightsHiddenToOutput[0][0];
+        double newWeightHidden1ToOut1 =  weightsHiddenToOutput[0][0] - learningRate * (inputHidden1Out1 - neuralNetwork.outputGradients[0][0]);
+
+        System.out.println("Old Weights From  Hidden Layer to Output Layer: \n" + Arrays.deepToString(weightsHiddenToOutput));
+        neuralNetwork.updateWeights();
+        System.out.println("Expected Weight From Hidden-Neuron 1 to Output-Neuron 1: " + newWeightHidden1ToOut1);
+        System.out.println("Actual Weight From Input-Neuron 1 to Hidden-Neuron 1: " + weightsHiddenToOutput[0][0]);
+        System.out.println("New Weights Hidden Layer to Output Layer  \n" + Arrays.deepToString(weightsHiddenToOutput));
+        Assertions.assertEquals(newWeightHidden1ToOut1 ,weightsHiddenToOutput[0][0]);
     }
 
 }
