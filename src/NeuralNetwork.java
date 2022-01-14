@@ -6,6 +6,9 @@ public class NeuralNetwork {
     private int outputNeurons;
     private String activationFunction;
     private int epochs;
+    private double learningRate;
+
+    private double[] input;
 
     // Gewichtematrix von Eingabeschicht zur verborgenen Schicht
     double[][] weightsInputToHidden;
@@ -22,11 +25,27 @@ public class NeuralNetwork {
     // Vorhersage des Netzes
     double[] prediction;
 
-    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, int epochs){
+    // Speichert Gradienten der Neuronen in der versteckten Schicht
+    double[][] hiddenGradients;
+
+    //speichert Gradienten der Neuronen in der Ausgabeschicht
+    double[][] outputGradients;
+
+    //Eingabe Z der versteckten Schicht
+    double[][] inputFinalLayer;
+
+   //Eingabe Z der versteckten Schicht
+    double[][] inputHiddenLayer;
+
+    double[][] outputHiddenLayer;
+
+    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, int epochs, double learningRate, double[] input){
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
         this.outputNeurons = outputNeurons;
         this.epochs = epochs;
+        this.learningRate = learningRate;
+        this.input = input;
 
         weightsInputToHidden = new double[hiddenNeurons][inputNeurons];
         weightsHiddenToOutput = new double[outputNeurons][hiddenNeurons];
@@ -39,6 +58,13 @@ public class NeuralNetwork {
         biasOutputLayer = new double[outputNeurons][1];
 
         activationFunction = "ReLu";
+
+        hiddenGradients = new double[hiddenNeurons][1];
+        outputGradients = new double[outputNeurons][1];
+
+        inputFinalLayer = new double[hiddenNeurons][1];
+        inputHiddenLayer = new double[hiddenNeurons][1];
+
 
 
 
@@ -56,7 +82,7 @@ public class NeuralNetwork {
      * @param biasOutputLayer
      * @param epochs
      */
-    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, int epochs) {
+    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, int epochs,double learningRate,double[] input) {
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
         this.outputNeurons = outputNeurons;
@@ -66,6 +92,10 @@ public class NeuralNetwork {
         this.biasHiddenLayer = biasHiddenLayer;
         this.biasOutputLayer = biasOutputLayer;
         this.epochs=epochs;
+        this.learningRate = learningRate;
+        this.input =  input;
+        this.outputGradients = new double[outputNeurons][1];
+        this.hiddenGradients = new double[hiddenNeurons][1];
 
     }
 
@@ -96,57 +126,69 @@ public class NeuralNetwork {
     public double[][] activationFunction(double[][] z){
         if(activationFunction.equalsIgnoreCase("ReLu")) {
             for(int i=0; i < z.length; i++){
-                for(int j=0; j<z[0].length; j++)
-                z[i][j] = Math.max(0,z[i][j]);
+                z[i][0] = Math.max(0,z[i][0]);
             }
             return z;
         }
         else  if(activationFunction.equalsIgnoreCase("tanh")) {
             for(int i=0; i < z.length; i++){
-                for(int j=0; j<z[0].length; j++){
-                    z[i][j] = Math.tanh(z[i][j]);
-            }
+                    z[i][0] = Math.tanh(z[i][0]);
+
             }
 
             return z;
         }
         else if(activationFunction.equalsIgnoreCase("sigmoid")) {
             for(int i=0; i < z.length; i++){
-                for(int j=0; j<z[0].length; j++)
-                    z[i][j] = 1/ (1 + Math.exp(-z[i][j]));
+                    z[i][0] = sigmoid(z[i][0]);
             }
             return z;
         }
         else{
             for(int i=0; i < z.length; i++){
-                for(int j=0; j<z[0].length; j++)
-                    z[i][j] = Math.max(0,z[i][j]);
+                    z[i][0] = Math.max(0,z[i][0]);
             }
             return z;
         }
     }
 
-    public double[] makePrediction(double[] input){
+    /**
+     * Hilfsmethode, die Sigmoidfunktion für einen gegebenen Wert berechnet
+     * @param z
+     * @return
+     */
+    public double sigmoid( double z){
+        return 1/ (1 + Math.exp(-z));
+    }
+
+    /**
+     * Diese Methode implementiert die Produktion der Ausgabe des neuronalen Netzes
+     * @return eindimensionales byte-Array. Array hat die gleiche Länge wie es Output-Neuronen gibt
+     * Der Index repräsentiert der Ausgabewert des Ausgabeneurons an der entsprechenden Stelle
+     * Jedes Ausgabeneuron repräsentiert eine Klasse. Die Eingabe wird der Klasse zugeordnet,
+     * deren Neuron den höchsten Wert aufweist
+     */
+    public double[] makePrediction(){
         // Eingabe als Matrix aufbereiten
         double[][] inputAsMatrix = Matrix.transposeMatrix(new double[][]{input});
 
         // Eingabevektor mit weightsInputToHidden-Matrix multiplizieren
-         double[][] hiddenInput = Matrix.multiplyMatrices(weightsInputToHidden,inputAsMatrix);
+        double[][] hiddenInput = Matrix.multiplyMatrices(weightsInputToHidden,inputAsMatrix);
 
         //  biasHiddenLayer zu Ergebnis der Multiplikation addieren
-        hiddenInput = Matrix.addMatrices(hiddenInput,biasHiddenLayer);
+        inputHiddenLayer = Matrix.addMatrices(hiddenInput,biasHiddenLayer);
 
         // Aktivierungsfunktion anwenden
-        double[][] hiddenOutput = activationFunction(hiddenInput);
+        outputHiddenLayer= activationFunction(inputHiddenLayer);
 
         // Eingabematrix der letzten Schicht berechnen: hiddenOutput Mal weightsHiddenToOutput
-        double[][] finalInput = Matrix.multiplyMatrices(weightsHiddenToOutput,hiddenOutput);
+        inputFinalLayer = Matrix.multiplyMatrices(weightsHiddenToOutput,outputHiddenLayer);
 
         //  biasOutputLayer zu Ergebnis der Multiplikation addieren
-        finalInput = Matrix.addMatrices(finalInput,biasOutputLayer);
+        inputFinalLayer = Matrix.addMatrices(inputFinalLayer,biasOutputLayer);
 
         // Aktivierungsfunktion anwenden
-        double[][] finalOutput = activationFunction(finalInput);
+        double[][] finalOutput = activationFunction(inputFinalLayer);
 
         prediction = Arrays.stream(finalOutput)
                 .flatMapToDouble(Arrays::stream)
@@ -154,11 +196,7 @@ public class NeuralNetwork {
         return prediction;
     }
 
-    /**
-     * Diese Methode berechnet den Fehler anhand der quadratischen Kostenfunktion
-     * @return Fehlerfaktor Delta
-     */
-    private double computeOutputError(){return 1.0;};
+
 
     /**
      * Diese Methode berechnet die Kostenfunktion. Diese berechnet den Fehler in der Vorhersage(Methode makePrediction) des Netzes
@@ -172,7 +210,7 @@ public class NeuralNetwork {
         }
         double[] costVector = Matrix.subtract(expectedResults,prediction);
 
-        double cost = 1.0/2 * Math.pow(computeVectorLength(costVector),2);
+        double cost =  1.0/2.0 * computeVectorLength(costVector);
         return cost;
     }
 
@@ -191,12 +229,115 @@ public class NeuralNetwork {
         }
 
 
-    private void backpropagateError(){}
+    /**
+     * Diese Methode berechnet den Gradienten für jedes Neuron mit dem Backprogropagation-Algorithmus. Die Gradienten für jede Schicht
+     * werden in dem entsprechenden Array gespeichert: hiddenGradients/outputGradients
+     * @param targetOutputs Die Zielwerte, die vom Netz erlernt werden sollen
+     */
+    public void backpropagateError(double[] targetOutputs){
+        /**
+         * 1. Schritt: Fehler(Gradient) in der Ausgabe-Ebene ermitteln:
+         */
+        computeOutputError(targetOutputs);
+
+
+        /**
+         * 2. Schritt: Fehler(Gradient) in der verdeckten Schicht berechnen
+         * Matrix der Gewichte Hidden To Output transponieren,
+         * Matrix mit Gradientenmatrix der Ausgabeschicht multiplizieren
+         * Matrix mit Ableitung der Aktivierungsfunktion multiplizieren
+         */
+
+        double[][] resultMatrix = Matrix.transposeMatrix(weightsHiddenToOutput);
+       resultMatrix = Matrix.multiplyMatrices(resultMatrix,outputGradients);
+       for(int i=0; i<resultMatrix.length; i++){
+           hiddenGradients[i][0] = resultMatrix[i][0] * derivativeActivationFunction(inputHiddenLayer[i][0]);
+       }
+
+
+
+    }
+
+    /**
+     * Diese Methode berechnet den Fehler(Gradient)in der Ausgabeschicht anhand der quadratischen Kostenfunktion
+     * Gradient = Ableitung der Kostenfunktion nach dem Ausgabewert des Neurons * Ableitung der Aktivierungsfunktion
+     * Gradienten werden im Gradientenarray der Ausgabeschicht gespeichert
+     */
+    public void computeOutputError(double[] targetOutputs){
+
+        // Ableitung der quadratischen Kostenfunktion: Vorhersage - Zielwert
+        for(int i=0; i < prediction.length; i++){
+            outputGradients[i][0] = prediction[i] - targetOutputs[i];
+        }
+        for(int i=0; i<outputGradients.length;i++){
+            outputGradients[i][0] = outputGradients[i][0]*derivativeActivationFunction(inputFinalLayer[i][0]);
+        }
+
+
+    };
+
+    /**
+     * Das ist eine Hilfsmethode, um die Ableitung der aktuellen Aktivierungsfunktion zu berechnen
+     * @param z
+     * @return
+     */
+    public double derivativeActivationFunction(double z){
+            if(activationFunction.equalsIgnoreCase("ReLu")){
+                if(z<=0) return 0;
+                else return 1;
+            }
+            else if(activationFunction.equalsIgnoreCase("tanh")){
+                    return 1-(Math.pow(Math.tanh(z),2));
+                }
+            else if(activationFunction.equalsIgnoreCase("sigmoid")){
+                return sigmoid(z) * (1-sigmoid(z));
+            }
+            else {
+                if(z<=0) return 0;
+                else return 1;
+            }
+    }
 
     /**
      * Diese Methode aktualisiert die Gewichte und die Bias anhand des Gradienten
      */
-    private void updateWeightsAndBiases(){}
+    private void updateWeightsAndBiases() {
+
+
+        updateWeights();
+        updateBiases();
+    }
+
+    /**
+     * Diese Methode aktualisiert die Gewichte und Biaswerte anhand der berechneten Gradienten
+     * neues Gewicht von Neuron i zu Neuron j = altes Gewicht  - eta * (Eingabewert von Neuron i zu Neuron j - Gradient des Neurons)
+     * neuer Biaswert = alter Biaswert - eta * Gradient des Neurons
+     */
+    public void updateWeights(){
+        for (int i = 0; i < weightsInputToHidden.length; i++) {
+            for (int j = 0; j < weightsInputToHidden[0].length; j++) {
+                weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - (learningRate * hiddenGradients[i][0] * input[j]);
+            }
+
+        }
+
+        for (int i = 0; i < weightsHiddenToOutput.length; i++) {
+            for (int j = 0; j < weightsHiddenToOutput[0].length; j++) {
+                weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - (learningRate * outputGradients[i][0] * outputHiddenLayer[i][0]);
+                ;
+            }
+
+        }
+    }
+
+    public void updateBiases(){
+        for(int i=0; i < biasHiddenLayer.length;i++){
+            biasHiddenLayer[i][0] = biasHiddenLayer[i][0] - (learningRate * hiddenGradients[i][0]);
+        }
+        for(int i=0; i < biasOutputLayer.length;i++){
+            biasOutputLayer[i][0] = biasOutputLayer[i][0] -(learningRate * outputGradients[i][0]);
+        }
+    }
 
 
 
@@ -210,7 +351,7 @@ public class NeuralNetwork {
         double[] expected = new double[]{2.0, 0.1, -1};
 
 
-        NeuralNetwork nn = new NeuralNetwork(3,4,3,1);
+        NeuralNetwork nn = new NeuralNetwork(3,4,3,1,0.5,input);
 
         System.out.println("Creating Neural Network: " + nn.inputNeurons + "-Input Neurons, " +
                 nn.hiddenNeurons + "-Hidden Neurons, " +
@@ -219,12 +360,14 @@ public class NeuralNetwork {
         System.out.println("Using " + nn.activationFunction + " function" + " for activation\n");
         System.out.println("Initial Weights: \n Input To Hidden: " + Arrays.deepToString(nn.weightsInputToHidden) + "\n" +
                 "Hidden To Output:\n" + Arrays.deepToString(nn.weightsHiddenToOutput)+"\n");
-
-        System.out.println("The input is:" + Arrays.toString(input)+ "\n");
-        System.out.println("The Output is: "+ Arrays.toString(nn.makePrediction(input)) + "\n");
-        System.out.println("The Output to learn is: "+ Arrays.toString(expected) + "\n");
-
-        System.out.println("The error is: " + nn.costFunction(expected));
-
+        System.out.println("The input is:" + Arrays.toString(input) + "\n");
+for(int i=0; i<20; i++) {
+    System.out.println("The Output is: " + Arrays.toString(nn.makePrediction()) + "\n");
+    System.out.println("The Output to learn is: " + Arrays.toString(expected) + "\n");
+    System.out.println("The error is: " + nn.costFunction(expected));
+    System.out.println("------------------------------------------------------------------------------------");
+    nn.backpropagateError(expected);
+    nn.updateWeightsAndBiases();
+}
   }
 }
