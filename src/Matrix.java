@@ -25,7 +25,7 @@ public class Matrix {
     }
 
     public static double[][] transposeMatrix(double[][] matrix) {
-        double transpose[][] = new double[matrix[0].length][matrix.length];
+        double[][] transpose = new double[matrix[0].length][matrix.length];
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[0].length; j++) {
                 transpose[j][i] = matrix[i][j];
