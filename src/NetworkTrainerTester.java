@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +94,18 @@ public class NetworkTrainerTester {
          return    neuralNetwork.computeVectorLength(  Matrix.subtract(expectedResults, prediction) );
 
 
+    }
+
+    public String getClass(MNISTDecoder.Fashion data, double[] prediction){
+        String[] classNames = new String[]{"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+                "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"};
+
+        ArrayList<Double> list=new ArrayList<>();
+        for(int i=0; i<prediction.length;i++){
+            list.add(prediction[i]);
+        }
+        int predictedLabel = list.indexOf(Collections.max(list));
+        return classNames[predictedLabel];
     }
 
 
