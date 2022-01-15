@@ -15,24 +15,22 @@ public class MNISTDecoder {
         byte[] imageByte = Files.readAllBytes(imagePath);
         byte[] labelByte = Files.readAllBytes(labelPath);
 
-        List<Fashion> fashions = new ArrayList<>();
+        ArrayList<Fashion> fashions = new ArrayList<>();
 
         int readHeadImages = 16;
         int readHeadLabel = 8;
         while(readHeadImages < imageByte.length) {
 
-            byte[][] image = new byte[28][28];
+            double[] image = new double[784];
 
-            for(int i = 0; i < 28; i++) {
-
-                for(int k = 0; k < 28; k++) {
-                    image[i][k] = imageByte[readHeadImages++];
-                }
-
+            for(int i = 0; i < 784; i++) {
+                    image[i] = imageByte[readHeadImages++];
             }
             int label = toUnsignedByte(labelByte[readHeadLabel++]);
+            double[] labelArray = new double[10];
+            labelArray[label] = 1.0;
 
-            fashions.add(new Fashion(label, image));
+            fashions.add(new Fashion(labelArray, image));
         }
 
         return fashions;
@@ -44,17 +42,19 @@ public class MNISTDecoder {
 
     public static class Fashion {
 
-        public int label;
-        public byte[][] image;
+        public double[] label;
+        public double[] image;
 
-        public Fashion(int label, byte[][] image) {
+        public Fashion(double[] label, double[] image) {
             this.label = label;
             this.image = image;
+
+
         }
 
         @Override
         public String toString() {
-            return (String.format("Label: %s Image: %s \n", this.label, Arrays.deepToString(this.image)));
+            return (String.format("Label: %s Image: %s \n", Arrays.toString(this.label), Arrays.toString(this.image)));
         }
 
     }
