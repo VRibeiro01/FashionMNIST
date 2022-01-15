@@ -28,7 +28,7 @@ public class Tests {
         double[][] biasHidden = new double[3][1];
         double[][] biasOutput = new double[2][1];
         learningRate = 0.3;
-        neuralNetwork = new NeuralNetwork(2,3,2, weightsInputToHidden,weightsHiddenToOutput, biasHidden, biasOutput,1,learningRate,input);
+        neuralNetwork = new NeuralNetwork(2,3,2, weightsInputToHidden,weightsHiddenToOutput, biasHidden, biasOutput,learningRate,input);
     }
 
     @Test

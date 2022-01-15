@@ -1,11 +1,13 @@
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class NeuralNetwork {
-    private final int inputNeurons;
-    private final int hiddenNeurons;
-    private final int outputNeurons;
-    private String activationFunction;
-    private final int epochs;
+    public final int inputNeurons;
+    public final int hiddenNeurons;
+    public final int outputNeurons;
+    public String activationFunction;
     private final double learningRate;
     private final double[] input;
 
@@ -32,11 +34,10 @@ public class NeuralNetwork {
     double[][] outputHiddenLayer;
 
 
-    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, int epochs, double learningRate, double[] input) {
+    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double learningRate, double[] input) {
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
         this.outputNeurons = outputNeurons;
-        this.epochs = epochs;
         this.learningRate = learningRate;
         this.input = input;
 
@@ -50,7 +51,7 @@ public class NeuralNetwork {
         biasHiddenLayer = new double[hiddenNeurons][1];
         biasOutputLayer = new double[outputNeurons][1];
 
-        activationFunction = "ReLu";
+        activationFunction = "tanh";
 
         hiddenGradients = new double[hiddenNeurons][1];
         outputGradients = new double[outputNeurons][1];
@@ -72,10 +73,9 @@ public class NeuralNetwork {
      * @param weightsHiddenToOutput
      * @param biasHiddenLayer
      * @param biasOutputLayer
-     * @param epochs
      */
     @SuppressWarnings("JavaDoc")
-    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, int epochs, double learningRate, double[] input) {
+    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, double learningRate, double[] input) {
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
         this.outputNeurons = outputNeurons;
@@ -84,7 +84,6 @@ public class NeuralNetwork {
         this.weightsHiddenToOutput = weightsHiddenToOutput;
         this.biasHiddenLayer = biasHiddenLayer;
         this.biasOutputLayer = biasOutputLayer;
-        this.epochs = epochs;
         this.learningRate = learningRate;
         this.input = input;
         this.outputGradients = new double[outputNeurons][1];
@@ -92,32 +91,7 @@ public class NeuralNetwork {
 
     }
 
-    public static void main(String[] args) {
 
-
-        double[] input = new double[]{1.0, -0.2, 0.54};
-        double[] expected = new double[]{2.0, 0.1, 1};
-
-
-        NeuralNetwork nn = new NeuralNetwork(3, 4, 3, 1, 0.5, input);
-
-        System.out.println("Creating Neural Network: " + nn.inputNeurons + "-Input Neurons, " +
-                nn.hiddenNeurons + "-Hidden Neurons, " +
-                nn.outputNeurons + "-Output Neurons");
-
-        System.out.println("Using " + nn.activationFunction + " function" + " for activation\n");
-        System.out.println("Initial Weights: \n Input To Hidden: " + Arrays.deepToString(nn.weightsInputToHidden) + "\n" +
-                "Hidden To Output:\n" + Arrays.deepToString(nn.weightsHiddenToOutput) + "\n");
-        System.out.println("The input is:" + Arrays.toString(input) + "\n");
-        for (int i = 0; i < 20; i++) {
-            System.out.println("The Output is: " + Arrays.toString(nn.makePrediction()) + "\n");
-            System.out.println("The Output to learn is: " + Arrays.toString(expected) + "\n");
-            System.out.println("The error is: " + nn.costFunction(expected));
-            System.out.println("------------------------------------------------------------------------------------");
-            nn.backpropagateError(expected);
-            nn.updateWeightsAndBiases();
-        }
-    }
 
     /**
      * Diese Methode initialisiert eine Matrix mit zufälligen Werten zwischen -1 und 1
@@ -274,7 +248,7 @@ public class NeuralNetwork {
         double[][] resultMatrix = Matrix.transposeMatrix(weightsHiddenToOutput);
         resultMatrix = Matrix.multiplyMatrices(resultMatrix, outputGradients);
         for (int i = 0; i < resultMatrix.length; i++) {
-            hiddenGradients[i][0] = resultMatrix[i][0] * derivativeActivationFunction(inputHiddenLayer[i][0]);
+            hiddenGradients[i][0] = resultMatrix[i][0] * derivativeActivationFunction(outputHiddenLayer[i][0]);
         }
 
 
@@ -290,7 +264,7 @@ public class NeuralNetwork {
         // Ableitung der quadratischen Kostenfunktion: Vorhersage - Zielwert
         for (int i = 0; i < prediction.length; i++) {
             outputGradients[i][0] = prediction[i] - targetOutputs[i];
-            outputGradients[i][0] = outputGradients[i][0] * derivativeActivationFunction(inputFinalLayer[i][0]);
+            outputGradients[i][0] = outputGradients[i][0] * derivativeActivationFunction(prediction[i]);
         }
 
     }
@@ -319,9 +293,7 @@ public class NeuralNetwork {
     /**
      * Diese Methode aktualisiert die Gewichte und die Bias anhand des Gradienten
      */
-    private void updateWeightsAndBiases() {
-
-
+    public void updateWeightsAndBiases() {
         updateWeights();
         updateBiases();
     }
@@ -334,14 +306,14 @@ public class NeuralNetwork {
     public void updateWeights() {
         for (int i = 0; i < weightsInputToHidden.length; i++) {
             for (int j = 0; j < weightsInputToHidden[0].length; j++) {
-                weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - learningRate * (input[j] * weightsInputToHidden[i][j] - hiddenGradients[i][0]);
+                weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - (learningRate * input[j] * weightsInputToHidden[i][j] * hiddenGradients[i][0]);
             }
 
         }
 
         for (int i = 0; i < weightsHiddenToOutput.length; i++) {
             for (int j = 0; j < weightsHiddenToOutput[0].length; j++) {
-                weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - learningRate * (outputHiddenLayer[j][0] * weightsHiddenToOutput[i][j] - outputGradients[i][0]);
+                weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - (learningRate * outputHiddenLayer[j][0] * weightsHiddenToOutput[i][j] * outputGradients[i][0]);
             }
 
         }
