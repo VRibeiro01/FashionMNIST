@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,8 +26,9 @@ public class MNISTDecoder {
             double[] image = new double[784];
 
             for(int i = 0; i < 784; i++) {
-                    image[i] = imageByte[readHeadImages++];
+                image[i] = toUnsignedByte(imageByte[readHeadImages++]);
             }
+
             int label = toUnsignedByte(labelByte[readHeadLabel++]);
             double[] labelArray = new double[10];
             labelArray[label] = 1.0;
