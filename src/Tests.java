@@ -28,7 +28,7 @@ public class Tests {
         double[][] biasHidden = new double[3][1];
         double[][] biasOutput = new double[2][1];
         learningRate = 0.3;
-        neuralNetwork = new NeuralNetwork(2,3,2, weightsInputToHidden,weightsHiddenToOutput, biasHidden, biasOutput,learningRate,input);
+        neuralNetwork = new NeuralNetwork(2,3,2, weightsInputToHidden,weightsHiddenToOutput, biasHidden, biasOutput,learningRate);
     }
 
     @Test
@@ -146,7 +146,7 @@ public class Tests {
 
     @Test
     public void makePrediction(){
-       double[] prediction = neuralNetwork.makePrediction();
+       double[] prediction = neuralNetwork.makePrediction(input);
        double[][] finalInput = Matrix.multiplyMatrices(weightsHiddenToOutput,new double[][]{{2.8},{0},{0}});
        Assertions.assertEquals(finalInput[0][0], prediction[0],0.001);
         Assertions.assertEquals(finalInput[1][0], prediction[1],0.001);
@@ -170,7 +170,7 @@ public class Tests {
 
     @Test
     public void computeOutputError() {
-        neuralNetwork.makePrediction();
+        neuralNetwork.makePrediction(input);
         System.out.println(Arrays.toString(neuralNetwork.prediction));
         double[] error = new double[]{1.1199999999999999 - (-1.0), 0.84 - 0};
         for (int i = 0; i < error.length; i++) {
@@ -178,13 +178,14 @@ public class Tests {
         }
         double[][] gradientMatrix = Matrix.transposeMatrix(new double[][]{error});
         neuralNetwork.computeOutputError(expectedOutput);
-        System.out.println("expected: " + Arrays.deepToString(gradientMatrix)+"\n"+ "Actual: " + Arrays.deepToString(neuralNetwork.outputGradients));
+        System.out.println("expected: " + Arrays.deepToString(gradientMatrix)+"\n"+ "Actual: " + Arrays
+                .deepToString(neuralNetwork.outputGradients));
         Assertions.assertTrue(Arrays.deepEquals(neuralNetwork.outputGradients, gradientMatrix));
     }
 
     @Test
     public void backPropagateError(){
-      neuralNetwork.makePrediction();
+      neuralNetwork.makePrediction(input);
       System.out.println("Prediction: "+Arrays.toString(neuralNetwork.prediction));
       neuralNetwork.backpropagateError(expectedOutput);
       System.out.println("Output Layer Gradient: " + Arrays.deepToString(neuralNetwork.outputGradients));
@@ -202,14 +203,14 @@ public class Tests {
 
     }
 
-    @Test
+  /*  @Test
     public void updateInputToHiddenWeights(){
-        neuralNetwork.makePrediction();
+        neuralNetwork.makePrediction(input);
         neuralNetwork.backpropagateError(expectedOutput);
        double inputIn1Hidden1 = input[0] * weightsInputToHidden[0][0];
        double newWeightIn1ToHidden1 =  weightsInputToHidden[0][0] - learningRate * (inputIn1Hidden1 - neuralNetwork.hiddenGradients[0][0]);
        System.out.println("Old Weights From Input to Hidden Layer: \n" + Arrays.deepToString(weightsInputToHidden));
-       neuralNetwork.updateWeights();
+       neuralNetwork.updateWeights(input);
        System.out.println("Expected Weight From Input-Neuron 1 to Hidden-Neuron 1: " + newWeightIn1ToHidden1);
         System.out.println("Actual Weight From Input-Neuron 1 to Hidden-Neuron 1: " + weightsInputToHidden[0][0]);
         System.out.println("New Weights Input to Hidden Layer  \n" + Arrays.deepToString(weightsInputToHidden));
@@ -223,17 +224,17 @@ public class Tests {
 
     @Test
     public void updateHiddenToOutputWeights(){
-        neuralNetwork.makePrediction();
+        neuralNetwork.makePrediction(input);
         neuralNetwork.backpropagateError(expectedOutput);
         double inputHidden1Out1 = neuralNetwork.outputHiddenLayer[0][0] * weightsHiddenToOutput[0][0];
         double newWeightHidden1ToOut1 =  weightsHiddenToOutput[0][0] - learningRate * (inputHidden1Out1 - neuralNetwork.outputGradients[0][0]);
 
         System.out.println("Old Weights From  Hidden Layer to Output Layer: \n" + Arrays.deepToString(weightsHiddenToOutput));
-        neuralNetwork.updateWeights();
+        neuralNetwork.updateWeights(input);
         System.out.println("Expected Weight From Hidden-Neuron 1 to Output-Neuron 1: " + newWeightHidden1ToOut1);
         System.out.println("Actual Weight From Input-Neuron 1 to Hidden-Neuron 1: " + weightsHiddenToOutput[0][0]);
         System.out.println("New Weights Hidden Layer to Output Layer  \n" + Arrays.deepToString(weightsHiddenToOutput));
         Assertions.assertEquals(newWeightHidden1ToOut1 ,weightsHiddenToOutput[0][0]);
-    }
+    }*/
 
 }

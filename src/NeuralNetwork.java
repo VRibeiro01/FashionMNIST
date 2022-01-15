@@ -1,5 +1,3 @@
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,10 +5,9 @@ public class NeuralNetwork {
     public final int inputNeurons;
     public final int hiddenNeurons;
     public final int outputNeurons;
-    public String activationFunction;
     private final double learningRate;
-    private final double[] input;
-
+    private double sizeTrainingsData;
+    public String activationFunction;
     // Gewichtematrix von Eingabeschicht zur verborgenen Schicht
     double[][] weightsInputToHidden;
     // Gewichtematrix von verborgenen Schicht zur Ausgabeschicht
@@ -33,13 +30,20 @@ public class NeuralNetwork {
     // Ausgabe der versteckten Schicht
     double[][] outputHiddenLayer;
 
+    public double[][] hiddenLayerBatchCorrectionValues;
 
-    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double learningRate, double[] input) {
+    public double[][] outLayerBatchCorrectionValues;
+
+
+
+
+    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, String activationFunction, double learningRate, double sizeTrainingsData) {
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
         this.outputNeurons = outputNeurons;
         this.learningRate = learningRate;
-        this.input = input;
+        this.sizeTrainingsData = sizeTrainingsData;
+
 
         weightsInputToHidden = new double[hiddenNeurons][inputNeurons];
         weightsHiddenToOutput = new double[outputNeurons][hiddenNeurons];
@@ -51,13 +55,17 @@ public class NeuralNetwork {
         biasHiddenLayer = new double[hiddenNeurons][1];
         biasOutputLayer = new double[outputNeurons][1];
 
-        activationFunction = "tanh";
+        this.activationFunction = activationFunction;
 
         hiddenGradients = new double[hiddenNeurons][1];
         outputGradients = new double[outputNeurons][1];
 
         inputFinalLayer = new double[hiddenNeurons][1];
         inputHiddenLayer = new double[hiddenNeurons][1];
+
+        this.hiddenLayerBatchCorrectionValues = new double[hiddenNeurons][inputNeurons+1];
+        this.outLayerBatchCorrectionValues = new double[outputNeurons][hiddenNeurons+1];
+
 
 
     }
@@ -75,7 +83,7 @@ public class NeuralNetwork {
      * @param biasOutputLayer
      */
     @SuppressWarnings("JavaDoc")
-    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, double learningRate, double[] input) {
+    public NeuralNetwork(int inputNeurons, int hiddenNeurons, int outputNeurons, double[][] weightsInputToHidden, double[][] weightsHiddenToOutput, double[][] biasHiddenLayer, double[][] biasOutputLayer, double learningRate) {
         this.inputNeurons = inputNeurons;
         this.hiddenNeurons = hiddenNeurons;
         this.outputNeurons = outputNeurons;
@@ -85,12 +93,11 @@ public class NeuralNetwork {
         this.biasHiddenLayer = biasHiddenLayer;
         this.biasOutputLayer = biasOutputLayer;
         this.learningRate = learningRate;
-        this.input = input;
         this.outputGradients = new double[outputNeurons][1];
         this.hiddenGradients = new double[hiddenNeurons][1];
 
-    }
 
+    }
 
 
     /**
@@ -165,7 +172,7 @@ public class NeuralNetwork {
      * Jedes Ausgabeneuron repräsentiert eine Klasse. Die Eingabe wird der Klasse zugeordnet,
      * deren Neuron den höchsten Wert aufweist
      */
-    public double[] makePrediction() {
+    public double[] makePrediction(double[] input) {
         // Eingabe als Matrix aufbereiten
         double[][] inputAsMatrix = Matrix.transposeMatrix(new double[][]{input});
 
@@ -193,22 +200,7 @@ public class NeuralNetwork {
         return prediction;
     }
 
-    /**
-     * Diese Methode berechnet die Kostenfunktion. Diese berechnet den Fehler in der Vorhersage(Methode makePrediction) des Netzes
-     * Die Kosten werden anhand der quadratischen Kostenfunktion berechnet
-     *
-     * @return
-     */
-    //TODO Methode für mehrere Eingabevektoren implementieren
-    @SuppressWarnings("JavaDoc")
-    public double costFunction(double[] expectedResults) {
-        if (prediction.length != expectedResults.length) {
-            throw new IllegalArgumentException("Prediction and Expectation don't match in size!");
-        }
-        double[] costVector = Matrix.subtract(expectedResults, prediction);
 
-        return 1.0 / 2.0 * computeVectorLength(costVector);
-    }
 
     /**
      * Das ist eine Hilfsmethode, um die Kosten zu berechnen. Diese Methode berechnet die Länge eines Vektors
@@ -293,9 +285,52 @@ public class NeuralNetwork {
     /**
      * Diese Methode aktualisiert die Gewichte und die Bias anhand des Gradienten
      */
-    public void updateWeightsAndBiases() {
+    public void batchUpdate(double divider) {
+        for (int i = 0; i < hiddenLayerBatchCorrectionValues.length; i++) {
+            for (int j = 0; j < hiddenLayerBatchCorrectionValues[0].length; j++) {
+                hiddenLayerBatchCorrectionValues[i][j] = hiddenLayerBatchCorrectionValues[i][j] / divider;
+            }
+            hiddenLayerBatchCorrectionValues[i][hiddenLayerBatchCorrectionValues[0].length-1] =hiddenLayerBatchCorrectionValues[i][hiddenLayerBatchCorrectionValues[0].length-1]/divider;
+
+        }
+        for (int i = 0; i < outLayerBatchCorrectionValues.length; i++) {
+            for (int j = 0; j < outLayerBatchCorrectionValues[0].length; j++) {
+                outLayerBatchCorrectionValues[i][j] = outLayerBatchCorrectionValues[i][j] / divider;
+            }
+            outLayerBatchCorrectionValues[i][outLayerBatchCorrectionValues[0].length-1] = outLayerBatchCorrectionValues[i][outLayerBatchCorrectionValues[0].length-1]/divider;
+        }
+
         updateWeights();
         updateBiases();
+    }
+
+
+    public void sumUpCorrectionValues(double[] input) {
+        for (int i = 0; i < weightsInputToHidden.length; i++) {
+            for (int j = 0; j < weightsInputToHidden[0].length-1; j++) {
+                hiddenLayerBatchCorrectionValues[i][j] += learningRate * input[j] * weightsInputToHidden[i][j] * hiddenGradients[i][0];
+            }
+            hiddenLayerBatchCorrectionValues[i][hiddenLayerBatchCorrectionValues[0].length-1]+=learningRate * hiddenGradients[i][0];
+        }
+        for (int i = 0; i < weightsHiddenToOutput.length; i++) {
+            for (int j = 0; j < weightsHiddenToOutput[0].length-1; j++) {
+                outLayerBatchCorrectionValues[i][j] += learningRate * outputHiddenLayer[j][0] * weightsHiddenToOutput[i][j] * outputGradients[i][0];
+            }
+            outLayerBatchCorrectionValues[i][outLayerBatchCorrectionValues[0].length-1] += learningRate * outputGradients[i][0];
+        }
+    }
+
+    public double getHiddenWeightCorrectionValue(int i, int j){
+        return hiddenLayerBatchCorrectionValues[i][j];
+    }
+    public double getOutputWeightCorrectionValue(int i, int j){
+        return outLayerBatchCorrectionValues[i][j];
+    }
+    public double getOutputBiasCorrectionValue(int i){
+        return outLayerBatchCorrectionValues[i][outLayerBatchCorrectionValues[0].length-1];
+    }
+    public double getHiddenBiasCorrectionValue(int i){
+        return hiddenLayerBatchCorrectionValues[i][hiddenLayerBatchCorrectionValues[0].length-1];
     }
 
     /**
@@ -306,14 +341,14 @@ public class NeuralNetwork {
     public void updateWeights() {
         for (int i = 0; i < weightsInputToHidden.length; i++) {
             for (int j = 0; j < weightsInputToHidden[0].length; j++) {
-                weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - (learningRate * input[j] * weightsInputToHidden[i][j] * hiddenGradients[i][0]);
-            }
+                weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - getHiddenWeightCorrectionValue(i, j);
 
+            }
         }
 
         for (int i = 0; i < weightsHiddenToOutput.length; i++) {
             for (int j = 0; j < weightsHiddenToOutput[0].length; j++) {
-                weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - (learningRate * outputHiddenLayer[j][0] * weightsHiddenToOutput[i][j] * outputGradients[i][0]);
+                weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - getOutputWeightCorrectionValue(i,j);
             }
 
         }
@@ -325,10 +360,34 @@ public class NeuralNetwork {
      */
     public void updateBiases() {
         for (int i = 0; i < biasHiddenLayer.length; i++) {
+            biasHiddenLayer[i][0] = biasHiddenLayer[i][0] - getHiddenBiasCorrectionValue(i);
+        }
+        for (int i = 0; i < biasOutputLayer.length; i++) {
+            biasOutputLayer[i][0] = biasOutputLayer[i][0] - getOutputBiasCorrectionValue(i);
+        }
+    }
+
+    public void stochasticUpdate(double[] input){
+        for (int i = 0; i < weightsInputToHidden.length; i++) {
+            for (int j = 0; j < weightsInputToHidden[0].length; j++) {
+                weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - (learningRate * input[j] * weightsInputToHidden[i][j] * hiddenGradients[i][0]);
+
+            }
+        }
+
+        for (int i = 0; i < weightsHiddenToOutput.length; i++) {
+            for (int j = 0; j < weightsHiddenToOutput[0].length; j++) {
+                weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - (learningRate * outputHiddenLayer[j][0] * weightsHiddenToOutput[i][j] * outputGradients[i][0]);
+            }
+
+        }
+        for (int i = 0; i < biasHiddenLayer.length; i++) {
             biasHiddenLayer[i][0] = biasHiddenLayer[i][0] - (learningRate * hiddenGradients[i][0]);
         }
         for (int i = 0; i < biasOutputLayer.length; i++) {
             biasOutputLayer[i][0] = biasOutputLayer[i][0] - (learningRate * outputGradients[i][0]);
         }
     }
+
+
 }
