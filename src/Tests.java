@@ -215,14 +215,7 @@ public class Tests {
         System.out.println("New Weights Input to Hidden Layer  \n" + Arrays.deepToString(weightsInputToHidden));
         Assertions.assertEquals(newWeightIn1ToHidden1,weightsInputToHidden[0][0]);
 
-        double inputHidden1Out1 = neuralNetwork.outputHiddenLayer[0][0] * weightsHiddenToOutput[0][0];
-        double newWeightHidden1ToOut1 =  weightsInputToHidden[0][0] - learningRate * (inputHidden1Out1 - neuralNetwork.outputGradients[0][0]);
-        System.out.println("Old Weights From  Hidden Layer to Output Layer: \n" + Arrays.deepToString(weightsHiddenToOutput));
-        neuralNetwork.updateWeights();
-        System.out.println("Expected Weight From Input-Neuron 1 to Hidden-Neuron 1: " + newWeightIn1ToHidden1);
-        System.out.println("Actual Weight From Input-Neuron 1 to Hidden-Neuron 1: " + weightsInputToHidden[0][0]);
-        System.out.println("New Weights Input to Hidden Layer  \n" + Arrays.deepToString(weightsInputToHidden));
-        Assertions.assertEquals(newWeightIn1ToHidden1,weightsInputToHidden[0][0]);
+
 
 
 
