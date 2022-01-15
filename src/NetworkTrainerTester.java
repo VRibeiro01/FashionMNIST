@@ -21,7 +21,10 @@ public class NetworkTrainerTester {
     }
 
     public static void main(String[] args) throws IOException {
-        new NetworkTrainerTester("sigmoid",30,0.3,3,10000).batchTrain();
+
+        NetworkTrainerTester ntt = new NetworkTrainerTester("tanh",50,0.5,9,10000);
+        ntt.batchTrain();
+
 
         }
 

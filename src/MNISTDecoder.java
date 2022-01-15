@@ -26,7 +26,7 @@ public class MNISTDecoder {
             double[] image = new double[784];
 
             for(int i = 0; i < 784; i++) {
-                image[i] = toUnsignedByte(imageByte[readHeadImages++]);
+                image[i] = toUnsignedByte(imageByte[readHeadImages++])/255.0;
             }
 
             int label = toUnsignedByte(labelByte[readHeadLabel++]);
