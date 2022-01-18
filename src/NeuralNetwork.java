@@ -1,5 +1,5 @@
 import java.util.Arrays;
-import java.util.List;
+
 
 public class NeuralNetwork {
     public final int inputNeurons;
@@ -107,10 +107,10 @@ public class NeuralNetwork {
      * @param matrix Die Gewichtematrix, die mit zufälligen Werten initialisiert werden soll
      */
     private void initializeMatrix(double[][] matrix) {
-        double range = 1.0 - (-1) + 1;
+        double range = 0.5-(-0.5);
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
-                matrix[i][j] = (Math.random() * range) - 1.0;
+                matrix[i][j] = -0.5+(Math.random() * range);
             }
         }
     }
@@ -135,6 +135,8 @@ public class NeuralNetwork {
             return z;
         } else if (activationFunction.equalsIgnoreCase("tanh")) {
             for (int i = 0; i < z.length; i++) {
+                if( Double.isNaN(z[i][0]))System.out.println("NaN at tanh: Index - " + i );
+                if( Double.isInfinite(z[i][0]))System.out.println("Infinite at tanh: Index - " + i );
                 z[i][0] = Math.tanh(z[i][0]);
 
             }
@@ -176,20 +178,23 @@ public class NeuralNetwork {
         // Eingabe als Matrix aufbereiten
         double[][] inputAsMatrix = Matrix.transposeMatrix(new double[][]{input});
 
+
         // Eingabevektor mit weightsInputToHidden-Matrix multiplizieren
         double[][] hiddenInput = Matrix.multiplyMatrices(weightsInputToHidden, inputAsMatrix);
 
+
         //  biasHiddenLayer zu Ergebnis der Multiplikation addieren
-        inputHiddenLayer = Matrix.addMatrices(hiddenInput, biasHiddenLayer);
+        inputHiddenLayer = Matrix.addMatrices(hiddenInput, biasHiddenLayer,"inputHiddenLayer");
 
         // Aktivierungsfunktion anwenden
         outputHiddenLayer = activationFunction(inputHiddenLayer);
+
 
         // Eingabematrix der letzten Schicht berechnen: hiddenOutput Mal weightsHiddenToOutput
         inputFinalLayer = Matrix.multiplyMatrices(weightsHiddenToOutput, outputHiddenLayer);
 
         //  biasOutputLayer zu Ergebnis der Multiplikation addieren
-        inputFinalLayer = Matrix.addMatrices(inputFinalLayer, biasOutputLayer);
+        inputFinalLayer = Matrix.addMatrices(inputFinalLayer, biasOutputLayer,"inputFinalLayer");
 
         // Aktivierungsfunktion anwenden
         double[][] finalOutput = activationFunction(inputFinalLayer);
@@ -255,7 +260,7 @@ public class NeuralNetwork {
 
         // Ableitung der quadratischen Kostenfunktion: Vorhersage - Zielwert
         for (int i = 0; i < prediction.length; i++) {
-            outputGradients[i][0] = prediction[i] - targetOutputs[i];
+            outputGradients[i][0] =targetOutputs[i] - prediction[i];
             outputGradients[i][0] = outputGradients[i][0] * derivativeActivationFunction(prediction[i]);
         }
 
@@ -371,6 +376,10 @@ public class NeuralNetwork {
         for (int i = 0; i < weightsInputToHidden.length; i++) {
             for (int j = 0; j < weightsInputToHidden[0].length; j++) {
                 weightsInputToHidden[i][j] = weightsInputToHidden[i][j] - (learningRate * input[j] * weightsInputToHidden[i][j] * hiddenGradients[i][0]);
+                if(Double.isInfinite(weightsInputToHidden[i][j])) {
+                    weightsInputToHidden[i][j] = Double.MIN_VALUE;
+                }
+
 
             }
         }
@@ -378,11 +387,17 @@ public class NeuralNetwork {
         for (int i = 0; i < weightsHiddenToOutput.length; i++) {
             for (int j = 0; j < weightsHiddenToOutput[0].length; j++) {
                 weightsHiddenToOutput[i][j] = weightsHiddenToOutput[i][j] - (learningRate * outputHiddenLayer[j][0] * weightsHiddenToOutput[i][j] * outputGradients[i][0]);
+                if(Double.isInfinite(weightsInputToHidden[i][j])) {
+                    weightsInputToHidden[i][j] = Double.MIN_VALUE;
+                }
             }
 
         }
         for (int i = 0; i < biasHiddenLayer.length; i++) {
             biasHiddenLayer[i][0] = biasHiddenLayer[i][0] - (learningRate * hiddenGradients[i][0]);
+            if(Double.isInfinite(biasHiddenLayer[i][0])) {
+                System.out.println("biasH is infinite");
+            }
         }
         for (int i = 0; i < biasOutputLayer.length; i++) {
             biasOutputLayer[i][0] = biasOutputLayer[i][0] - (learningRate * outputGradients[i][0]);
