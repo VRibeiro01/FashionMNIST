@@ -24,9 +24,10 @@ public class NetworkTrainerTester {
 
     public static void main(String[] args) throws IOException {
 
-        NetworkTrainerTester ntt = new NetworkTrainerTester("ReLu",2,0.5,1568,60000);
+        NetworkTrainerTester ntt = new NetworkTrainerTester("ReLu",2,0.5,1568,40000);
 
         ntt.batchTrain();
+        ntt.validateNetwork();
         ntt.testNetwork();
 
         }
@@ -59,6 +60,20 @@ public class NetworkTrainerTester {
             System.out.println("________________________________________________________________\n");
 
         }
+
+    }
+
+    public void validateNetwork() {
+
+        for (int i = 40000; i < dataSet.size(); i++) {
+            double[] inputImage = dataSet.get(i).image;
+            double[] targetOutput = dataSet.get(i).label;
+            double[] prediction = neuralNetwork.makePrediction(inputImage);
+            compareTargetOutputWithPrediction(prediction, targetOutput);
+        }
+
+        System.out.println(calculateAccuracy());
+        System.out.println("________________________________________________________________\n");
 
     }
 
