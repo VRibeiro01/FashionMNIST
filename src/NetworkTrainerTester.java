@@ -1,18 +1,20 @@
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class NetworkTrainerTester {
 
-    public final NeuralNetwork neuralNetwork;
+    public NeuralNetwork neuralNetwork;
     public final List<MNISTDecoder.Fashion> dataSet;
+    public final List<MNISTDecoder.Fashion> testDataSet;
     public int epochs;
+    public int sizeTestData;
     public double sizeTrainingsData;
+    private double tp;
 
     public NetworkTrainerTester(String activationFunction, int epochs, double learningRate, int width, double sizeTrainingsData) throws IOException {
-        dataSet = MNISTDecoder.loadDataSet("C:\\Users\\vivia\\IdeaProjects\\is_lernen\\resources\\t10k-images-idx3-ubyte","C:\\Users\\vivia\\IdeaProjects\\is_lernen\\resources\\t10k-labels-idx1-ubyte");
+        dataSet = MNISTDecoder.loadDataSet(System.getProperty("user.dir") + "/resources/train-images-idx3-ubyte",System.getProperty("user.dir") + "/resources/train-labels-idx1-ubyte");
+        testDataSet = MNISTDecoder.loadDataSet(System.getProperty("user.dir") + "/resources/t10k-images-idx3-ubyte",System.getProperty("user.dir") + "/resources/t10k-labels-idx1-ubyte");
+        sizeTestData = testDataSet.size();
         neuralNetwork = new NeuralNetwork(784,width,10,activationFunction,learningRate,sizeTrainingsData);
         this.epochs = epochs;
         System.out.println("New Neural Network with " + width + " hidden Neurons and a learning rate of " + learningRate);
@@ -22,9 +24,10 @@ public class NetworkTrainerTester {
 
     public static void main(String[] args) throws IOException {
 
-        NetworkTrainerTester ntt = new NetworkTrainerTester("tanh",50,0.5,9,10000);
-        ntt.batchTrain();
+        NetworkTrainerTester ntt = new NetworkTrainerTester("ReLu",2,0.5,1568,60000);
 
+        ntt.batchTrain();
+        ntt.testNetwork();
 
         }
 
@@ -41,8 +44,8 @@ public class NetworkTrainerTester {
 
                 double[] prediction =neuralNetwork.makePrediction(inputImage);
                 cost += costFunction(prediction, targetOutput);
-                System.out.println("Prediction: " + Arrays.toString(prediction));
-                System.out.println("Target Output: " + Arrays.toString(targetOutput) + "\n");
+//                System.out.println("Prediction: " + Arrays.toString(prediction));
+//                System.out.println("Target Output: " + Arrays.toString(targetOutput) + "\n");
 
                 neuralNetwork.backpropagateError(targetOutput);
 
@@ -56,6 +59,20 @@ public class NetworkTrainerTester {
             System.out.println("________________________________________________________________\n");
 
         }
+
+    }
+
+    public void testNetwork() {
+
+        for (MNISTDecoder.Fashion fashion : testDataSet) {
+            double[] inputImage = fashion.image;
+            double[] targetOutput = fashion.label;
+            double[] prediction = neuralNetwork.makePrediction(inputImage);
+            compareTargetOutputWithPrediction(prediction, targetOutput);
+        }
+
+        System.out.println(calculateAccuracy());
+        System.out.println("________________________________________________________________\n");
 
     }
 
@@ -109,6 +126,28 @@ public class NetworkTrainerTester {
         }
         int predictedLabel = list.indexOf(Collections.max(list));
         return classNames[predictedLabel];
+    }
+
+    public double calculateAccuracy() {
+        return tp / sizeTestData;
+    }
+
+    public void compareTargetOutputWithPrediction(double[] prediction, double[] targetOutput) {
+        int indexOfCorrectLabel = getMax(targetOutput);
+        int indexOfMaxPrediction = getMax(prediction);
+
+        if (indexOfCorrectLabel == indexOfMaxPrediction) {
+            tp++;
+        }
+    }
+
+    public int getMax(double[] array) {
+        int max = 0;
+        for ( int i = 1; i < array. length; i++ )
+        {
+            if ( array[i] > array[max] ) max = i;
+        }
+        return max;
     }
 
 
