@@ -8,10 +8,10 @@ public class Matrix {
         double cell = 0;
         for (int i = 0; i < secondMatrix.length; i++) {
             cell += firstMatrix[row][i] * secondMatrix[i][col];
-            if(Double.isInfinite(cell)) {
+            /*if(Double.isInfinite(cell)) {
                 if(cell < Double.MAX_VALUE) cell = Double.MIN_VALUE;
                 else cell = Double.MAX_VALUE;
-            }
+            }*/
         }
         return cell;
     }
