@@ -58,18 +58,25 @@ public class NeuralNetwork {
     public double[] forwardPropagation(double inputFromData[]){
         double[] input = inputFromData;
         int i;
+
+        // Iteriert über alle Schichten
         for(ArrayList<HashMap<String,double[]>> layer: network){
             i=0;
             double[] new_inputs = new double[layer.size()];
+
+            // Berechnet die Ausgabe von jedem Neuron. Die Ausgabe wird im Neuron unter Schlüssel "output" eingetragen
             for(HashMap<String,double[]> neuron : layer ){
                double neuronInput = calculateInput(neuron.get("weights"), input);
                double output = activate(neuronInput);
                neuron.put("output", new double[]{output});
+
+               // Ausgabe der Neuronen der aktuellen Schicht werden zur Eingabe der nächsten Schicht
                new_inputs[i] = output;
                i++;
             }
             input = new_inputs;
         }
+        // Ausgabe der Neuronen der letzten Schicht ist die Vorhersage des Netzes
         return input;
     }
 
@@ -84,21 +91,24 @@ public class NeuralNetwork {
             ArrayList<HashMap<String,double[]>> layer = network.get(i);
             List<Double> errors= new ArrayList<>();
 
-            // Fehler in verteckten Schicht berechnen
+            // Fehler in versteckten Schicht berechnen
             if(i != network.size()-1){
                 for(int j=0; j < layer.size(); j++){
                      error = 0.0;
                     for(HashMap<String,double[]> neuron : network.get(i+1)){
+                        //Fehler in verstecktem Neuron j = (Summe gewichteter Fehler von Neuron j zu Neuronen der nächsten Schicht) * Ableitung
                         error += (neuron.get("weights")[j] * neuron.get("delta")[0]);
                     }
                     errors.add(error);
                 }
+                // Ermiiteln des Fehlers der Ausgabeschicht: (Ausgabe - Zielwert) * Ausgabe
             } else {
                 for(int j=0; j < layer.size(); j++){
                     HashMap<String,double[]> neuron = layer.get(j);
                     errors.add(neuron.get("output")[0] - expected[j]);
                 }
             }
+            // Fehler für jedes Neuron zu Ende berechnen, also mit Ableitung von der Aktivierungsfunktion multiplizieren und eintragen
             for(int j=0; j < layer.size(); j++){
                 HashMap<String,double[]> neuron = layer.get(j);
                 neuron.put("delta",new double[]{errors.get(j)*activationDerivative(neuron.get("output")[0])});
@@ -115,22 +125,23 @@ public class NeuralNetwork {
                 inputs = new double[network.get(i-1).size()];
                 int idx =0;
 
-                // Inputwerte aus vorhergehende Schicht ermitteln
+                // Inputwerte aus vorhergehenden Schicht ermitteln
                 for(HashMap<String, double[]> neuron : network.get(i-1)){
                     inputs[idx] = neuron.get("output")[0];
                     idx++;
                 }
             }
-            // Über Neuronen iterieren und Gewichte und Bias aktualisieren
+            // Über Neuronen iterieren und Gewichte und Bias anhand der berechneten Gradienten aktualisieren
             for(HashMap<String, double[]> neuron : network.get(i)){
                 for(int j=0;  j<inputs.length; j++){
                     neuron.get("weights")[j] -= learningRate*neuron.get("delta")[0]*inputs[j];
                 }
+                // Aktualiere die Bias-Werte
                 neuron.get("weights")[neuron.get("weights").length-1] -= learningRate*neuron.get("delta")[0];
             }
         }
     }
-
+// Update Strategie: Stochastischer Gradientenabstieg
     public void trainNetwork(int epochs, List<MNISTDecoder.Fashion> trainingDataSet,int trainingDataSize){
         for(int i=0; i <= epochs; i++){
             double sumError = 0;
@@ -147,7 +158,7 @@ public class NeuralNetwork {
                     ", Error: " + sumError);
         }
     }
-
+// Fehler anhand der quadratischen Kostenfunktion
     private double computeError(double[] prediction, double[] expected){
         double error=0;
         for(int i=0; i < prediction.length; i++){

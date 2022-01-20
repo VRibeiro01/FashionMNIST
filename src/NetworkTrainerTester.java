@@ -6,24 +6,26 @@ public class NetworkTrainerTester {
     public NeuralNetwork neuralNetwork;
     public final List<MNISTDecoder.Fashion> dataSet;
     public final List<MNISTDecoder.Fashion> testDataSet;
-    public int epochs;
 
 
 
-    public NetworkTrainerTester(int epochs, double learningRate, int width, int sizeTrainingsData) throws IOException {
+
+    public NetworkTrainerTester(int epochs, double learningRate, int width) throws IOException {
         dataSet = MNISTDecoder.loadDataSet(System.getProperty("user.dir") + "/resources/train-images-idx3-ubyte",System.getProperty("user.dir") + "/resources/train-labels-idx1-ubyte");
         testDataSet = MNISTDecoder.loadDataSet(System.getProperty("user.dir") + "/resources/t10k-images-idx3-ubyte",System.getProperty("user.dir") + "/resources/t10k-labels-idx1-ubyte");
         neuralNetwork = new NeuralNetwork(784,width,10,learningRate);
-        this.epochs = epochs;
         System.out.println("New Neural Network with " + width + " hidden Neurons and a learning rate of " + learningRate);
         System.out.println("Using Sigmoid as activationFunction");
     }
 
     public static void main(String[] args) throws IOException {
 
-        NetworkTrainerTester ntt = new NetworkTrainerTester(900,0.01,10,100);
+        NetworkTrainerTester ntt = new NetworkTrainerTester(300,0.5,50);
 
-        ntt.neuralNetwork.trainNetwork(ntt.epochs,ntt.dataSet, 40000);
+
+
+        ntt.neuralNetwork.trainNetwork(300,ntt.dataSet, 10000);
+
         //ntt.validateNetwork();
         ntt.testNetwork();
 
