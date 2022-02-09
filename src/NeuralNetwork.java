@@ -29,7 +29,8 @@ public class NeuralNetwork {
             HashMap<String, double[]> neuron= new HashMap<>();
             double[] weight = new double[inputNeuronCount+1];
             for(int j=0; j < weight.length; j++){
-                weight[j] = rand.nextDouble();
+                //Änderungen gem. Stelldinger
+                weight[j] = (rand.nextDouble() -0.5) / layerSize;
             }
             neuron.put("weights",weight);
             layer.add(neuron);
@@ -55,7 +56,7 @@ public class NeuralNetwork {
     }
 
     // Forward-Propagation, um Ausgabe des Netzes zu produzieren
-    public double[] forwardPropagation(double inputFromData[]){
+    public double[] forwardPropagation(double[] inputFromData){
         double[] input = inputFromData;
         int i;
 
@@ -101,7 +102,7 @@ public class NeuralNetwork {
                     }
                     errors.add(error);
                 }
-                // Ermiiteln des Fehlers der Ausgabeschicht: (Ausgabe - Zielwert) * Ausgabe
+                // Ermitteln des Fehlers der Ausgabeschicht: (Ausgabe - Zielwert) * Ausgabe
             } else {
                 for(int j=0; j < layer.size(); j++){
                     HashMap<String,double[]> neuron = layer.get(j);
@@ -144,6 +145,7 @@ public class NeuralNetwork {
 // Update Strategie: Stochastischer Gradientenabstieg
     public void trainNetwork(int epochs, List<MNISTDecoder.Fashion> trainingDataSet,int trainingDataSize){
         for(int i=0; i <= epochs; i++){
+            Collections.shuffle(trainingDataSet);
             double sumError = 0;
             for(int input=0; input < trainingDataSize; input++){
                 double[] image = trainingDataSet.get(input).image;
