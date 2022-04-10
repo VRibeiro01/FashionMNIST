@@ -15,6 +15,8 @@ public class Matrix {
         }
         return cell;
     }
+
+
     public static double[][] multiplyMatrices(double[][] firstMatrix, double[][] secondMatrix) {
         if (firstMatrix[0].length != secondMatrix.length) {
             throw new IllegalArgumentException("Matrix Sizes not fit for multiplication");

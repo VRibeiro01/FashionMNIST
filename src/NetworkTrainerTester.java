@@ -1,7 +1,10 @@
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
 public class NetworkTrainerTester {
+
 
     public NeuralNetwork neuralNetwork;
     public final List<MNISTDecoder.Fashion> dataSet;
@@ -10,32 +13,35 @@ public class NetworkTrainerTester {
 
 
 
-    public NetworkTrainerTester(int epochs, double learningRate, int width) throws IOException {
+    public NetworkTrainerTester( double learningRate, int width, String actFunc) throws IOException {
         dataSet = MNISTDecoder.loadDataSet(System.getProperty("user.dir") + "/resources/train-images-idx3-ubyte",System.getProperty("user.dir") + "/resources/train-labels-idx1-ubyte");
         testDataSet = MNISTDecoder.loadDataSet(System.getProperty("user.dir") + "/resources/t10k-images-idx3-ubyte",System.getProperty("user.dir") + "/resources/t10k-labels-idx1-ubyte");
-        neuralNetwork = new NeuralNetwork(784,width,10,learningRate);
+        neuralNetwork = new NeuralNetwork(784,width,10,learningRate,actFunc);
         System.out.println("New Neural Network with " + width + " hidden Neurons and a learning rate of " + learningRate);
-        System.out.println("Using Sigmoid as activationFunction");
+        System.out.println("Using " + actFunc + " as activationFunction");
     }
 
     public static void main(String[] args) throws IOException {
-
-        NetworkTrainerTester ntt = new NetworkTrainerTester(300,0.5,50);
-
-
-
-        ntt.neuralNetwork.trainNetwork(300,ntt.dataSet, 10000);
-
-        //ntt.validateNetwork();
-        ntt.testNetwork();
-
+        
+        NetworkTrainerTester ntt_2 = new NetworkTrainerTester(0.1, 90, "sigmoid");
+        ntt_2.neuralNetwork.trainNetworkWithAnnealing(100, ntt_2.dataSet, 59999);
+        new File("testNet4.txt");
+        try {
+            FileWriter fw = new FileWriter("testNet4.txt");
+            double accuracy = ntt_2.testNetwork();
+            fw.write(String.valueOf(accuracy));
+            fw.close();
+        }catch (Exception e){
+            System.out.println("Error with filewriter");
         }
 
+    }
 
 
 
 
-    public void validateNetwork() {
+
+    public double validateNetwork() {
         System.out.println("-------------------------------Validating the network-----------------------");
         double tp = 0.0;
         for (int i=40000; i <dataSet.size(); i++ ) {
@@ -44,13 +50,14 @@ public class NetworkTrainerTester {
             double[] prediction = neuralNetwork.forwardPropagation(inputImage);
             tp+=compareTargetOutputWithPrediction(prediction, targetOutput);
         }
-
-        System.out.println(calculateAccuracy(tp, dataSet.size()-40000));
+        double acc = calculateAccuracy(tp, dataSet.size()-40000);
+        System.out.println(acc);
         System.out.println("________________________________________________________________\n");
+        return acc;
 
     }
 
-    public void testNetwork() {
+    public double testNetwork() {
         System.out.println("-------------------------------Testing the network-----------------------");
         double truePositives = 0.0;
         for (MNISTDecoder.Fashion fashion : testDataSet) {
@@ -60,13 +67,12 @@ public class NetworkTrainerTester {
             truePositives +=compareTargetOutputWithPrediction(prediction, targetOutput);
         }
 
-        System.out.println(calculateAccuracy( truePositives,testDataSet.size()));
+        double accuracy = calculateAccuracy( truePositives,testDataSet.size());
+        System.out.println(accuracy);
         System.out.println("________________________________________________________________\n");
+        return accuracy;
 
     }
-
-
-
 
 
 
